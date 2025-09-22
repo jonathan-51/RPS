@@ -1,1 +1,2 @@
-# RPS
+## 2025-09-22
+Wanted to learn python so I can ultimately learn more about AI. Planning to build a Rock Paper Scissors game and train to bot to become the ultimate computer when it comes to RPS. Before I get too ahead of myself, I first programmed a simple RPS game using the crude style of if's and elif's, and the random function.
