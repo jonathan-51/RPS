@@ -1,102 +1,123 @@
 import random
 
-Rock = "r"
-Paper = "p"
-Scissors = "s"
-options = [Rock,Paper,Scissors]
+combinations = [[0,-1,1],[1,0,-1],[-1,1,0]] #Create matrix for all combinations
 
-def IsOdd(n): #Checks if number is odd or even
+#Checks if number is odd or even
+def IsOdd(n): 
     return n % 2 == 0
 
-while True: #Loops the Game
-    best_of = input("Choose a format: best of 3, best of 5, best of 7....")
-    num_rounds = 0 #Tracks the number of rounds (Excluding ties)
-    comp_score = 0 #Tracks the score
-    user_score = 0 #Tracks the score
-
+#gets format for current game
+def get_format(best_of_local): 
     while True: #filters out all possible responses except for odd numbers
         try: #Converts input into an integer
-            best_of = int(best_of)
+            best_of_local = int(best_of_local)
         except:
-            best_of = input("Encountered an error.\nPlease enter an odd number: ")
+            best_of_local = input("Encountered an error.\nPlease enter an odd number: ")
 
-        if type(best_of) == int and IsOdd(best_of) == False: #Filters out the odd numbers
+        if type(best_of_local) == int and IsOdd(best_of_local) == False: #Filters out the odd numbers
             break
         else: #filters out everything else like strings and even numbers
-            best_of = input("Encountered an error.\nPlease enter an odd number: ")
+            best_of_local = input("Encountered an error.\nPlease enter an odd number: ")
 
-    num_win_req = (best_of + 1)/2 #number of wins to win the game    
-    while user_score < num_win_req and comp_score < num_win_req: #loops the rounds
-        comp_choice = random.choice(options)
-        print(comp_choice)
-        #print(f"comp_score = {comp_score}")
-        #print(f"user_score = {user_score}")
-        #print(f"comp_win_left = {comp_win_left}")
-        #print(f"user_win_left = {user_win_left}")
+    return  best_of_local
+
+#gets the user choice for each round and verifies it
+def verify_user_choice(user_choice_local):
+    while True: #Checks to see if player entered a valid choice (r/p/s)
+        if user_choice_local != "r" and user_choice != "p" and user_choice != "s":
+            user_choice_local = input("Please Try Again. Enter (r/p/s): ").lower()
+        else:
+            return 
+
+#gets outcome of the round in the form of a number
+def get_outcome_round (user_input,combinations_local,comp_choice):
+    if user_input == "r":
+        return combinations_local[0][comp_choice] #assigns the outcome of the round to a variable
+    elif user_input == "p":
+        return combinations_local[1][comp_choice] #assigns the outcome of the round to a variable
+    else:
+        return combinations_local[2][comp_choice] #assigns the outcome of the round to a variable    
+
+#Determines the winner of a round
+def determine_round_winner (outcome_local,dictionary_local):
+    if outcome_local == 0:
+        print(f"Tie. Please Try Again.\nYOU: {dictionary_local["User Score"]} | COMPUTER: {dictionary_local["Computer Score"]}\n")
+        return dictionary_local
+    elif outcome_local == 1:
+        dictionary_local["User Score"] += 1  #Updates User score
+        dictionary_local["Round Number"] += 1 #Updates number of rounds effectively played
+        print(f"Round {dictionary_local["Round Number"]} goes to YOU.\nYOU: {dictionary_local["User Score"]} | COMPUTER: {dictionary_local["Computer Score"]}\n")
+        return dictionary_local
+    else:
+        dictionary_local["Computer Score"] += 1  #Updates computer score
+        dictionary_local["Round Number"] += 1 #Updates number of rounds effectively played
+        print(f"Round {dictionary_local["Round Number"]} goes to the COMPUTER.\nYOU: {dictionary_local["User Score"]} | COMPUTER: {dictionary_local["Computer Score"]}\n")
+        return dictionary_local
+
+#Determines if the user wants to play again
+def verify_play_again (try_again_response_local):
+    while True: #Checks if they entered something other than y or n
+        if try_again_response_local == "n" or try_again_response_local == "y":
+            break
+        else:
+            try_again_response_local = input("Please try again: ").lower()
+    return try_again_response_local
+
+#Executes Play again
+def exe_play_again(comp_score_local,num_win_req_local):
+    if comp_score_local == num_win_req_local : #Checks to see if Computer won, else player won
+        try_again_response_local = input("You Lost.\nWould you like to play again? (Y/N): ").lower()
+
+        #Verifies the user input and then determines if they want to play again.
+        if verify_play_again(try_again_response_local) == "n":
+            return False
+    else:
+        try_again_response_local = input("You Won.\nWould you like to play again? (Y/N): ").lower()
+
+        #Verifies the user input and then determines if they want to play again.
+        if verify_play_again(try_again_response_local) == "n":
+            return False
+    return    
+
+#Start Game
+while True: 
+    #Storiing Number of effective rounds played & scores of both sides
+    user_score = 0
+    comp_score = 0
+    num_round = 0
+    dictionary = {"Round Number":0,
+                  "Computer Score":0,
+                  "User Score":0}
+    
+    #Determines Format
+    best_of = input("Choose a format: best of 3, best of 5, best of 7....")
+
+    #number of wins to win the game
+    num_win_req = (get_format(best_of) + 1)/2  
+
+    #loops the rounds
+    while user_score < num_win_req and comp_score < num_win_req:
+        #randomizes computer's choice
+        comp_choice = random.choice([0,1,2])
+
+        #Gets User Choice
         user_choice = input("Please Enter Your Choice (R for Rock, P for Paper, S for Scissors: ").lower()
 
-        while True: #Checks to see if player entered a valid choice (r/p/s)
-            if user_choice != "r" and user_choice != "p" and user_choice != "s":
-                user_choice = input("Please try again. Enter (r/p/s): ").lower()
-            else:
-                break
+        #Verifies User Choice
+        verify_user_choice(user_choice)
 
-        if user_choice == Rock and comp_choice == Paper: #Rock vs Paper
-            comp_score += 1 #Updates score
-            num_rounds += 1 #updates number of rounds effective rounds played
-            print(f"Round {num_rounds} goes to Computer.\nYou: {user_score}\nComputer: {comp_score}\n")
+        #converts whatever the user inputted into a specific number
+        outcome = get_outcome_round(user_choice,combinations,comp_choice)
 
-        elif user_choice == Rock and comp_choice == Scissors: #Rock vs Scissors
-            user_score += 1 #Updates score
-            num_rounds += 1
-            print(f"Round {num_rounds} goes to You.\nYou: {user_score}\nComputer: {comp_score}\n")
+        #Determines who won the round
+        dictionary = determine_round_winner(outcome,dictionary)
+        num_rounds = dictionary["Round Number"]
+        comp_score = dictionary["Computer Score"]
+        user_score = dictionary["User Score"]
 
-        elif user_choice == Paper and comp_choice == Rock: #Paper vs Rock
-            user_score += 1 #Updates score
-            num_rounds += 1
-            print(f"Round {num_rounds} goes to You.\nYou: {user_score}\nComputer: {comp_score}\n")
 
-        elif user_choice == Paper and comp_choice == Scissors: #Paper vs Scissors
-            comp_score += 1 #Updates score
-            num_rounds += 1
-            print(f"Round {num_rounds} goes to Computer.\nYou: {user_score}\nComputer: {comp_score}\n")
-
-        elif user_choice == Scissors and comp_choice == Rock: #Scissors vs Rock
-            comp_score += 1 #Updates score
-            num_rounds += 1
-            print(f"Round {num_rounds} goes to Computer.\nYou: {user_score}\nComputer: {comp_score}\n")
-
-        elif user_choice == Scissors and comp_choice == Paper: #Scissors vs Paper
-            user_score += 1 #Updates score
-            num_rounds += 1
-            print(f"Round {num_rounds} goes to You.\nYou: {user_score}\nComputer: {comp_score}\n")
-
-        else: #Same Combination
-            print(f"Tie. Please Try Again.\nYou: {user_score}\nComputer: {comp_score}\n")
-                
-    if comp_score == (best_of + 1)/2 : #Checks to see if Computer won, else player won
-        print("You Lost. Please Try Again!")
-        try_again_response = input("Would you like to play again? (Y/N): ").lower()
-
-        while True: #Checks if they entered something other than y or n
-            if try_again_response == "n" or try_again_response == "y":
-                break
-            else:
-                try_again_response = input("Please try again: ").lower()
-        if try_again_response == "n":
-            break
-    else:
-        print("You Won!")
-        try_again_response = input("Would you like to play again? (Y/N): ").lower()
-
-        while True: #Checks if they entered something other than y or n
-            if try_again_response == "n" or try_again_response == "y":
-                break
-            else:
-                try_again_response = input("Please try again: ").lower()
-
-        if try_again_response == "n":
-            break
+    if exe_play_again(comp_score,num_win_req) == False:
+        break
         
 
-print("\nThank you for playing.\n")
+print("\nThank you for playing.\n_____________________________________\n")
