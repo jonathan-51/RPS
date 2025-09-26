@@ -1,6 +1,11 @@
-import random
+import random,datetime,csv
 
 combinations = [[0,-1,1],[1,0,-1],[-1,1,0]] #Create matrix for all combinations
+numtoword = {0:"r",
+             1:"p",
+             2:"s"}
+
+time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
 #Checks if number is odd or even
 def IsOdd(n): 
@@ -41,16 +46,23 @@ def get_outcome_round (user_input,combinations_local,comp_choice):
 #Determines the winner of a round
 def determine_round_winner (outcome_local,dictionary_local):
     if outcome_local == 0:
+        dictionary_local["Round Winner"] = "tie" #Updates winner of the round
+        dictionary_local["Total Rounds"] += 1 #Updates TOTAL number of rounds played
         print(f"Tie. Please Try Again.\nYOU: {dictionary_local["User Score"]} | COMPUTER: {dictionary_local["Computer Score"]}\n")
+
         return dictionary_local
     elif outcome_local == 1:
         dictionary_local["User Score"] += 1  #Updates User score
         dictionary_local["Round Number"] += 1 #Updates number of rounds effectively played
+        dictionary_local["Total Rounds"] += 1 #Updates the TOTAL number of rounds played (including ties)
+        dictionary_local["Round Winner"] = "player" #Updates winner of the round
         print(f"Round {dictionary_local["Round Number"]} goes to YOU.\nYOU: {dictionary_local["User Score"]} | COMPUTER: {dictionary_local["Computer Score"]}\n")
         return dictionary_local
     else:
         dictionary_local["Computer Score"] += 1  #Updates computer score
         dictionary_local["Round Number"] += 1 #Updates number of rounds effectively played
+        dictionary_local["Total Rounds"] += 1 #Updates the TOTAL number of rounds played (including ties)
+        dictionary_local["Round Winner"] = "computer" #Updates winner of the round
         print(f"Round {dictionary_local["Round Number"]} goes to the COMPUTER.\nYOU: {dictionary_local["User Score"]} | COMPUTER: {dictionary_local["Computer Score"]}\n")
         return dictionary_local
 
@@ -81,13 +93,19 @@ def exe_play_again(comp_score_local,num_win_req_local):
 
 #Start Game
 while True: 
-    #Storiing Number of effective rounds played & scores of both sides
+    #Gets gameid for current game by assign final row on to variable rows.
+    with open("game_log.csv","r") as f:
+        for rows in csv.DictReader(f):
+            pass
+        gameid = int(rows["gameid"]) + 1
+
     user_score = 0
     comp_score = 0
-    num_round = 0
-    dictionary = {"Round Number":0,
-                  "Computer Score":0,
-                  "User Score":0}
+    dictionary = {"Round Number":0, # Storing number of rounds played (excl ties)
+                  "Computer Score":0, #Storing Computer score
+                  "User Score":0, #Storing Player score
+                  "Total Rounds":0, #Storing Total rounds played (incl ties)
+                  "Round Winner":""} #initializing key:value for game winner
     
     #Determines Format
     best_of = input("Choose a format: best of 3, best of 5, best of 7....")
@@ -108,16 +126,30 @@ while True:
 
         #converts whatever the user inputted into a specific number
         outcome = get_outcome_round(user_choice,combinations,comp_choice)
-
+        comp_choice_letter = numtoword[comp_choice]
         #Determines who won the round
         dictionary = determine_round_winner(outcome,dictionary)
-        num_rounds = dictionary["Round Number"]
-        comp_score = dictionary["Computer Score"]
-        user_score = dictionary["User Score"]
 
+        num_rounds = dictionary["Round Number"] #updates round # (excl ties)
+        comp_score = dictionary["Computer Score"] #updates computer score
+        user_score = dictionary["User Score"] #updates player score
+        tot_rounds = dictionary["Total Rounds"] #updates TOTAL round # (incl ties)
 
+        #Logs current round results: Game ID | Round #(incl ties) | Round #(excl ties) | Round Winner | Computer's Choice | Player Choice | Computer Score | Player Score
+        with open("match_report.csv","a") as f:
+            f.write(f"\n{gameid},{tot_rounds},{num_rounds},{dictionary["Round Winner"]},{comp_choice_letter},{user_choice},{comp_score},{user_score}")
+
+    if comp_score == num_rounds:
+        winner = "computer"
+    else:
+        winner = "player"
+    #Logs Game Result: Date + Time | Game Id | Winner | Best Of | Computer's Score| Player Score
+    with open("game_log.csv","a") as f:
+        f.write(f"\n{time},{gameid},{winner},{best_of},{comp_score},{user_score}")
+
+    #Asks Player if they want to play again
     if exe_play_again(comp_score,num_win_req) == False:
         break
-        
 
+  
 print("\nThank you for playing.\n_____________________________________\n")
